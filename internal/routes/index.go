@@ -17,6 +17,7 @@ func RouterInit() {
 	{
 		UsersRoutes(MainRouter)
 		TestRoutes(MainRouter)
+		AuthRoutes(MainRouter)
 	}
 	Router.Run()
 }
