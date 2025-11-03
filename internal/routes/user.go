@@ -1,14 +1,17 @@
 package routes
 
 import (
-	"app/internal/handler"
-
-	"github.com/julienschmidt/httprouter"
+	"github.com/gin-gonic/gin"
 )
 
-var Router = httprouter.New()
+func handleUser(c *gin.Context) {
+	name := c.Param("name")
+	c.JSON(200, gin.H{"message": "Helo! " + name})
+}
 
-func UserRoute() {
-	Router.GET("/", handler.IndexPage)
-	Router.GET("/hello/:name", handler.HelloPage)
+func UsersRoutes(rg *gin.RouterGroup) {
+	UsersRoute := rg.Group("/users")
+	{
+		UsersRoute.GET("/:name", handleUser)
+	}
 }
