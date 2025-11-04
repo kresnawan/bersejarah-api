@@ -10,6 +10,5 @@ func UsersRoutes(rg *gin.RouterGroup) {
 	UsersRoute := rg.Group("/users")
 	{
 		UsersRoute.GET("/", handler.GetAllUsers)
-		UsersRoute.POST("/register", handler.Register)
 	}
 }

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"app/internal/storage"
 
@@ -70,7 +71,7 @@ func Register(c *gin.Context) {
 
 	// Membaca request body
 	if err := c.BindJSON(&ReqBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "message": "Gagal membaca request body"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "message": "Failed reading request body"})
 		return
 	}
 
@@ -83,15 +84,17 @@ func Register(c *gin.Context) {
 	}
 
 	// Insert data
-	insertId, err := storage.RegisterUser(ReqBody.Name, ReqBody.Username, hashedPassword)
+	insertId, err := storage.InsertUser(ReqBody.Name, ReqBody.Username, hashedPassword)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Username telah dipakai"})
+		c.JSON(http.StatusConflict, gin.H{"message": "Username already taken"})
 		c.Abort()
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User registered, id: " + string(insertId)})
+	stringedInsertId := strconv.FormatInt(insertId, 10)
+
+	c.JSON(http.StatusOK, gin.H{"message": "User registered, id: " + stringedInsertId})
 	c.Abort()
 	return
 }
