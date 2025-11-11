@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"app/internal/storage"
@@ -61,28 +60,42 @@ func AddDataTempat(c *gin.Context) {
 }
 
 func UploadFoto(c *gin.Context) {
-	file, header, err := c.Request.FormFile("image")
+	form, err := c.MultipartForm()
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed reading the image"})
 		c.Abort()
 		return
 	}
 
-	defer file.Close()
+	files := form.File["images"]
 
-	fileExt := filepath.Ext(header.Filename)
-	originalFileName := strings.TrimSuffix(filepath.Base(header.Filename), fileExt)
-	now := time.Now()
-	filename := strings.ReplaceAll(strings.ToLower(originalFileName), " ", "-") + "-" + fmt.Sprintf("%v", now.Unix()) + fileExt
-
-	dst := filepath.Join("./uploads", filename)
-	if err := c.SaveUploadedFile(header, dst); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed saving the file"})
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No files uploaded"})
 		c.Abort()
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Successfully accept and save the image"})
+	var counter = 0
+
+	for _, file := range files {
+		fileExt := filepath.Ext(file.Filename)
+		now := time.Now()
+
+		epochMill := now.UnixNano()
+		filename := strconv.FormatInt(epochMill, 10) + fileExt
+		dst := filepath.Join("./uploads", filename)
+
+		if err := c.SaveUploadedFile(file, dst); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed saving the files in the cloud", "err": err})
+			c.Abort()
+			return
+		}
+
+		counter++
+	}
+
+	c.JSON(200, gin.H{"message": fmt.Sprintf("Successfully saved %v files", counter)})
 
 }
 

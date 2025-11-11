@@ -22,6 +22,8 @@ func RouterInit() {
 	var Router = gin.Default()
 	Router.SetTrustedProxies([]string{"127.0.0.1"})
 
+	Router.MaxMultipartMemory = 8 << 20
+
 	Router.GET("/ws", func(c *gin.Context) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 
