@@ -25,3 +25,7 @@ func GetHashFromParams(c *gin.Context) {
 	c.JSON(200, gin.H{"message": stringToHash, "hash": hashResult, "compare": match})
 
 }
+
+func HelloWorld(c *gin.Context) {
+	c.JSON(200, gin.H{"message": "Hello world"})
+}

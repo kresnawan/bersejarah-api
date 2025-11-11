@@ -10,5 +10,6 @@ func TestRoutes(rg *gin.RouterGroup) {
 	UsersRoute := rg.Group("/test")
 	{
 		UsersRoute.GET("/hash/:text", handler.GetHashFromParams)
+		UsersRoute.GET("/hello", handler.HelloWorld)
 	}
 }
