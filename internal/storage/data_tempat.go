@@ -1,6 +1,9 @@
 package storage
 
-import "encoding/json"
+import (
+	"app/internal/model"
+	"encoding/json"
+)
 
 func InsertDataTempat(namaTempat, alamatTempat, deskripsiTempat string, lati, longi float32) (int64, error) {
 	insertResult, err := Db.Exec("INSERT INTO data_tempat (title, description, address, latitude, longitude) VALUES (?, ?, ?, ?, ?)", namaTempat, deskripsiTempat, alamatTempat, lati, longi)
@@ -49,5 +52,36 @@ func GetAllDataTempat() ([]byte, error) {
 	}
 
 	return jsonData, err
+
+}
+
+func UploadFotoTempat(DataId int, FotoArr []model.FileD) ([]byte, error) {
+	tx, err := Db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare("INSERT INTO foto_tempat (data_id, nama_foto) VALUES (?, ?)")
+	if err != nil {
+		return nil, err
+	}
+
+	defer stmt.Close()
+
+	for _, row := range FotoArr {
+		_, err := stmt.Exec(DataId, row.Filename)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte("Photos inserted"), nil
 
 }

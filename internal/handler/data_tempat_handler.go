@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
 	"time"
 
+	"app/internal/model"
 	"app/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -60,6 +62,7 @@ func AddDataTempat(c *gin.Context) {
 }
 
 func UploadFoto(c *gin.Context) {
+
 	form, err := c.MultipartForm()
 
 	if err != nil {
@@ -77,8 +80,24 @@ func UploadFoto(c *gin.Context) {
 	}
 
 	var counter = 0
+	var imageArr []model.FileD
+	id, err := strconv.Atoi(c.PostForm("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed parse data id for image", "err": err})
+	}
+
+	// Memeriksa apakah ada file yang ukurannya lebih dari 1MB
 
 	for _, file := range files {
+		if file.Size > 1000000 {
+			c.Data(http.StatusBadRequest, "application/json", []byte(`{"message":"Images size too big"}`))
+			c.Abort()
+			return
+		}
+	}
+
+	for _, file := range files {
+
 		fileExt := filepath.Ext(file.Filename)
 		now := time.Now()
 
@@ -92,10 +111,41 @@ func UploadFoto(c *gin.Context) {
 			return
 		}
 
+		var fileIns model.FileD
+		fileIns.Filename = filename
+		fileIns.Size = int(file.Size)
+
+		imageArr = append(imageArr, fileIns)
 		counter++
 	}
 
-	c.JSON(200, gin.H{"message": fmt.Sprintf("Successfully saved %v files", counter)})
+	result, err := storage.UploadFotoTempat(id, imageArr)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed insert images into database", "err": err})
+		c.Abort()
+		return
+	}
+
+	type SuccessResponse struct {
+		Message string        `json:"message"`
+		Files   []model.FileD `json:"files"`
+		Query   string        `json:"query"`
+	}
+
+	var response SuccessResponse
+	response.Message = fmt.Sprintf("Successfully saved %v files", counter)
+	response.Files = imageArr
+	response.Query = string(result)
+
+	resoo, err := json.Marshal(response)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed convert image array to json", "err": err})
+	}
+
+	c.Data(200, "application/json", resoo)
+	c.Abort()
+	return
 
 }
 
