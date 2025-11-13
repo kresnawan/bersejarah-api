@@ -88,13 +88,13 @@ func UploadFoto(c *gin.Context) {
 
 	// Memeriksa apakah ada file yang ukurannya lebih dari 1MB
 
-	for _, file := range files {
-		if file.Size > 1000000 {
-			c.Data(http.StatusBadRequest, "application/json", []byte(`{"message":"Images size too big"}`))
-			c.Abort()
-			return
-		}
-	}
+	// for _, file := range files {
+	// 	if file.Size > 5000000 {
+	// 		c.Data(http.StatusBadRequest, "application/json", []byte(`{"message":"Images size too big"}`))
+	// 		c.Abort()
+	// 		return
+	// 	}
+	// }
 
 	for _, file := range files {
 
