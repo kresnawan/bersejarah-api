@@ -9,8 +9,8 @@ import (
 func DataTempatRoutes(rg *gin.RouterGroup) {
 	UsersRoute := rg.Group("/data")
 	{
-		UsersRoute.POST("/", handler.AddDataTempat)
+		UsersRoute.POST("", handler.AddDataTempat)
 		UsersRoute.POST("/upload", handler.UploadFoto)
-		UsersRoute.GET("/", handler.GetAllDataTempat)
+		UsersRoute.GET("", handler.GetAllDataTempat)
 	}
 }
