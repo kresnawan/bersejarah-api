@@ -10,6 +10,7 @@ import (
 
 	"app/internal/model"
 	"app/internal/storage"
+	"app/utility"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,24 +29,35 @@ func GetAllDataTempat(c *gin.Context) {
 func AddDataTempat(c *gin.Context) {
 	type RequestBody struct {
 		NamaTempat      string  `json:"nama_tempat"`
-		AlamatTempat    string  `json:"alamat_tempat"`
+		AlamatJalan     string  `json:"alamat_jalan"`
+		AlamatDusun     string  `json:"alamat_dusun"`
+		AlamatKelurahan string  `json:"alamat_kelurahan"`
+		AlamatKecamatan string  `json:"alamat_kecamatan"`
+		AlamatKabupaten string  `json:"alamat_kabupaten"`
 		DeskripsiTempat string  `json:"deskripsi"`
 		Latitude        float32 `json:"lat"`
 		Longitude       float32 `json:"long"`
-		Foto            string  `json:"foto"`
 	}
 
 	var ReqBody RequestBody
 
-	if err := c.BindJSON(&ReqBody); err != nil {
+	if err := c.ShouldBindJSON(&ReqBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Failed reading request body"})
 		c.Abort()
 		return
 	}
 
+	var address string = utility.ParseAddress(
+		ReqBody.AlamatJalan,
+		ReqBody.AlamatDusun,
+		ReqBody.AlamatKelurahan,
+		ReqBody.AlamatKecamatan,
+		ReqBody.AlamatKabupaten,
+	)
+
 	insertId, err := storage.InsertDataTempat(
 		ReqBody.NamaTempat,
-		ReqBody.AlamatTempat,
+		address,
 		ReqBody.DeskripsiTempat,
 		ReqBody.Latitude,
 		ReqBody.Longitude,
