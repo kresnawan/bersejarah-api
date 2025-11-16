@@ -68,9 +68,7 @@ func AddDataTempat(c *gin.Context) {
 		return
 	}
 
-	stringedInsertId := strconv.FormatInt(insertId, 10)
-
-	c.JSON(200, gin.H{"message": "Data successfully inserted, insert ID: " + stringedInsertId})
+	c.JSON(200, gin.H{"message": "Data successfully inserted", "insertid": insertId})
 }
 
 func UploadFoto(c *gin.Context) {
@@ -86,7 +84,7 @@ func UploadFoto(c *gin.Context) {
 	files := form.File["images"]
 
 	if len(files) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "No files uploaded"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No files uploaded", "files": files})
 		c.Abort()
 		return
 	}
