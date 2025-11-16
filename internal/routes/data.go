@@ -12,5 +12,6 @@ func DataTempatRoutes(rg *gin.RouterGroup) {
 		UsersRoute.POST("", handler.AddDataTempat)
 		UsersRoute.POST("/upload", handler.UploadFoto)
 		UsersRoute.GET("", handler.GetAllDataTempat)
+		UsersRoute.GET("/:id", handler.GetTempatByID)
 	}
 }

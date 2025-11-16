@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -157,6 +158,26 @@ func UploadFoto(c *gin.Context) {
 	c.Abort()
 	return
 
+}
+
+func GetTempatByID(c *gin.Context) {
+	id := c.Param("id")
+
+	data, err := storage.GetTempatByID(id)
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Row not found"})
+			c.Abort()
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Query failed", "err": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.Data(200, "application/json", data)
 }
 
 func DeleteDataTempat(c *gin.Context) {

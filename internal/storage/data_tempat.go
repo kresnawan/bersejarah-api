@@ -28,9 +28,10 @@ func GetAllDataTempat() ([]byte, error) {
 		Longitude   float64 `json:"longitude"`
 		Title       string  `json:"title"`
 		Description string  `json:"description"`
+		Address     string  `json:"address"`
 	}
 	var dataArr []DataTempat
-	rows, err := Db.Query("SELECT id, latitude, longitude, title, description FROM data_tempat")
+	rows, err := Db.Query("SELECT id, latitude, longitude, title, description, address FROM data_tempat")
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,7 @@ func GetAllDataTempat() ([]byte, error) {
 
 	for rows.Next() {
 		var data DataTempat
-		if err := rows.Scan(&data.Id, &data.Latitude, &data.Longitude, &data.Title, &data.Description); err != nil {
+		if err := rows.Scan(&data.Id, &data.Latitude, &data.Longitude, &data.Title, &data.Description, &data.Address); err != nil {
 			return nil, err
 		}
 
@@ -84,4 +85,41 @@ func UploadFotoTempat(DataId int, FotoArr []model.FileD) ([]byte, error) {
 
 	return []byte("Photos inserted"), nil
 
+}
+
+func GetTempatByID(id string) ([]byte, error) {
+	type DataTempat struct {
+		Id          int64   `json:"id"`
+		Latitude    float64 `json:"latitude"`
+		Longitude   float64 `json:"longitude"`
+		Title       string  `json:"title"`
+		Description string  `json:"description"`
+		Address     string  `json:"address"`
+		CreatedAt   string  `json:"created_at"`
+		UpdatedAt   string  `json:"updated_at"`
+	}
+	row := Db.QueryRow("SELECT * FROM data_tempat WHERE id = ?", id)
+
+	var dataTempat DataTempat
+
+	err := row.Scan(
+		&dataTempat.Id,
+		&dataTempat.Latitude,
+		&dataTempat.Longitude,
+		&dataTempat.Title,
+		&dataTempat.Description,
+		&dataTempat.UpdatedAt,
+		&dataTempat.CreatedAt,
+		&dataTempat.Address,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData, err := json.Marshal(dataTempat)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
 }
