@@ -20,12 +20,17 @@ func RouterInit() {
 	Router.Use(middleware.CORSMiddleware())
 	Router.SetTrustedProxies([]string{"127.0.0.1"})
 
-	MainRouter := Router.Group("/api/v1")
+	v1AuthRouter := Router.Group("/api/v1")
 	{
-		UsersRoutes(MainRouter)
-		TestRoutes(MainRouter)
-		AuthRoutes(MainRouter)
-		DataTempatRoutes(MainRouter)
+		AuthRoutes(v1AuthRouter)
+	}
+
+	v1Router := Router.Group("/api/v1")
+	v1Router.Use(middleware.NeedAuth())
+	{
+		UsersRoutes(v1Router)
+		TestRoutes(v1Router)
+		DataTempatRoutes(v1Router)
 	}
 
 	Router.Run()

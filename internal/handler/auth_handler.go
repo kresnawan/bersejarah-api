@@ -2,12 +2,15 @@ package handler
 
 import (
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"app/internal/storage"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func Login(c *gin.Context) {
@@ -55,7 +58,28 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Login berhasil"})
+	var (
+		key []byte
+		t   *jwt.Token
+	)
+
+	key = []byte(os.Getenv("JWT_KEY"))
+	t = jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"sub": ReqBody.Username,
+			"iss": "com.kresnawan.bersejarah",
+			"exp": time.Now().Add(time.Minute).Unix(),
+			"iat": time.Now().Unix(),
+		})
+
+	s, err := t.SignedString(key)
+	if err != nil {
+		c.Status(500)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Login berhasil", "access_token": s})
 	c.Abort()
 	return
 }
