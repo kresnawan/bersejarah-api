@@ -19,7 +19,7 @@ import (
 func GetAllDataTempat(c *gin.Context) {
 	data, err := storage.GetAllDataTempat()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed fetch the data", "err": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed fetch the data", "err": err.Error()})
 		c.Abort()
 		return
 	}
@@ -180,10 +180,76 @@ func GetTempatByID(c *gin.Context) {
 	c.Data(200, "application/json", data)
 }
 
-func DeleteDataTempat(c *gin.Context) {
+func GetFotoByID(c *gin.Context) {
+	id := c.Param("id")
+	data, err := storage.GetFotoByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.Status(404)
+			c.Abort()
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Error query"})
+		c.Abort()
+		return
+	}
 
+	c.Data(200, "application/json", data)
+}
+
+func DeleteDataTempat(c *gin.Context) {
+	DataID := c.Param("id")
+
+	res, err := storage.DeleteData(DataID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Execution failed", "err": err.Error()})
+		c.Abort()
+		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Execution failed", "err": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Data deleted successfully", "rows_affected": rowsAffected})
 }
 
 func UpdateDataTempat(c *gin.Context) {
+	type RequestBody struct {
+		ID        int     `json:"id"`
+		Alamat    string  `json:"addr"`
+		Deskripsi string  `json:"desc"`
+		Latitude  float32 `json:"lat"`
+		Longitude float32 `json:"long"`
+	}
+
+	var body RequestBody
+
+	if err := c.BindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		c.Abort()
+		return
+	}
+
+	res, err := storage.EditData(body.ID, body.Latitude, body.Longitude, body.Alamat, body.Deskripsi)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		c.Abort()
+		return
+	}
+
+	rowsA, err := res.RowsAffected()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Data successfully updated", "affected_rows": rowsA})
+	c.Abort()
 
 }

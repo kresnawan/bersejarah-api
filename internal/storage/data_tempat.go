@@ -2,6 +2,7 @@ package storage
 
 import (
 	"app/internal/model"
+	"database/sql"
 	"encoding/json"
 )
 
@@ -29,9 +30,33 @@ func GetAllDataTempat() ([]byte, error) {
 		Title       string  `json:"title"`
 		Description string  `json:"description"`
 		Address     string  `json:"address"`
+		Photo       string  `json:"photo"`
 	}
 	var dataArr []DataTempat
-	rows, err := Db.Query("SELECT id, latitude, longitude, title, description, address FROM data_tempat")
+	query := `
+		SELECT 
+			d.id,
+			d.latitude, 
+			d.longitude, 
+			d.title, 
+			d.description, 
+			d.address, 
+			f.nama_foto AS photo
+		FROM 
+			data_tempat d
+		LEFT JOIN 
+			foto_tempat f 
+		ON 
+			f.id = (
+				SELECT 
+					MIN(f_inner.id) 
+    			FROM 
+					foto_tempat f_inner
+    			WHERE 
+					f_inner.data_id = d.id
+			)
+	`
+	rows, err := Db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +65,15 @@ func GetAllDataTempat() ([]byte, error) {
 
 	for rows.Next() {
 		var data DataTempat
-		if err := rows.Scan(&data.Id, &data.Latitude, &data.Longitude, &data.Title, &data.Description, &data.Address); err != nil {
+		if err := rows.Scan(&data.Id, &data.Latitude, &data.Longitude, &data.Title, &data.Description, &data.Address, &data.Photo); err != nil {
 			return nil, err
 		}
 
 		dataArr = append(dataArr, data)
+	}
+
+	if len(dataArr) == 0 {
+		dataArr = make([]DataTempat, 0)
 	}
 
 	jsonData, err := json.Marshal(dataArr)
@@ -122,4 +151,67 @@ func GetTempatByID(id string) ([]byte, error) {
 	}
 
 	return jsonData, nil
+}
+
+func GetFotoByID(id string) ([]byte, error) {
+	rows, err := Db.Query("SELECT nama_foto FROM foto_tempat WHERE data_id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+
+	var ArrDataNama []string
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var DataNama string
+		if err := rows.Scan(&DataNama); err != nil {
+			return nil, err
+		}
+
+		ArrDataNama = append(ArrDataNama, DataNama)
+	}
+
+	if len(ArrDataNama) == 0 {
+		ArrDataNama = make([]string, 0)
+	}
+
+	jsonData, err := json.Marshal(ArrDataNama)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
+
+}
+
+func DeleteData(id string) (sql.Result, error) {
+	res, err := Db.Exec("DELETE FROM data_tempat WHERE id = ?", id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func EditData(id int, lati, longi float32, addr string, desc string) (sql.Result, error) {
+	res, err := Db.Exec(`
+		UPDATE
+			data_tempat
+		SET
+			latitude = ?,
+			longitude = ?,
+			address = ?,
+			description = ?
+		WHERE
+			id = ?
+
+	`, lati, longi, addr, desc, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

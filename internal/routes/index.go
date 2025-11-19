@@ -21,8 +21,6 @@ func RouterInit() {
 	Router.Use(middleware.CORSMiddleware())
 	Router.SetTrustedProxies([]string{"127.0.0.1"})
 
-	Router.Static("/static", "/go-jekan/go-blok/uploads")
-
 	v1AuthRouter := Router.Group("/api/v1")
 	{
 		AuthRoutes(v1AuthRouter)
